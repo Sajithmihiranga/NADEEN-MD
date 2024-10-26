@@ -1,146 +1,96 @@
 const {cmd , commands} = require('../command')
-const yts = require('yt-search');
-const fg = require('api-dylux');
-
-// -------- Song Download --------
+const fg = require('api-dylux')
+const yts = require('yt-search')
 cmd({
-    pattern: 'mp3',
-    desc: 'download songs',
+    pattern: "mp3",
+    desc: "To download songs.",
     react: "📼",
-    category: 'download',
+    category: "download",
     filename: __filename
 },
-async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-    try {
-        if (!q) return reply('*මට ලින්ක් එකක් හරි,නමක් හරි දීපන් download කරන්න 😑*');
+async(conn, mek, m,{from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply}) => {
+try{
+if(!q) return reply("Please give me a url or title")  
+const search = await yts(q)
+const data = search.videos[0];
+const url = data.url
+    
+    
+let desc = `
+⫷⦁[ * '-'_꩜ 𝐃𝐀𝐑𝐊 𝐙𝐄𝐑𝐎 𝐌𝐃 𝐒𝐎𝐍𝐆 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃𝐄𝐑 ꩜_'-' * ]⦁⫸
 
-        const search = await yts(q);
-        const data = search.videos[0];
-        const url = data.url;
+🎵 *📼 NADEEN-MD MP3 DOWNLOADER . .⚙️*
 
-        let desc = `*📼 NADEEN-MD MP3 DOWNLOADER . .⚙️*
+➥ *Title:* ${data.title} 
+➥ *Duration:* ${data.timestamp} 
+➥ *Views:* ${data.views} 
+➥ *Uploaded On:* ${data.ago} 
+➥ *Link:* ${data.url} 
 
-🎃⚙️ TITLE - ${data.title}
+> *©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*
+`
 
-🎃⚙️ VIEWS - ${data.views}
+await conn.sendMessage(from,{image:{url: data.thumbnail},caption:desc},{quoted:mek});
 
-🎃⚙️ DESCRIPTION - ${data.description}
+//download audio
 
-🎃⚙️ TIME - ${data.timestamp}
+let down = await fg.yta(url)
+let downloadUrl = down.dl_url
 
-🎃⚙️ AGO - ${data.ago}
+//send audio message
+await conn.sendMessage(from,{audio: {url:downloadUrl},mimetype:"audio/mpeg"},{quoted:mek})
+await conn.sendMessage(from,{document: {url:downloadUrl},mimetype:"audio/mpeg",fileName:data.title + ".mp3",caption:"*©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*"},{quoted:mek})
 
-*Reply This Message With Option*
+}catch(e){
+console.log(e)
+  reply('𝐶𝑎𝑛𝑡 𝐹𝑖𝑛𝑑 α ѕσηg')
+}
+})
 
-*1 Audio With Normal Format*
-*2 Audio With Document Format*
-
-> *©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*`;
-
-        const vv = await conn.sendMessage(from, { image: { url: data.thumbnail }, caption: desc }, { quoted: mek });
-
-        conn.ev.on('messages.upsert', async (msgUpdate) => {
-            const msg = msgUpdate.messages[0];
-            if (!msg.message || !msg.message.extendedTextMessage) return;
-
-            const selectedOption = msg.message.extendedTextMessage.text.trim();
-
-            if (msg.message.extendedTextMessage.contextInfo && msg.message.extendedTextMessage.contextInfo.stanzaId === vv.key.id) {
-                switch (selectedOption) {
-                    case '1':
-                        let down = await fg.yta(url);
-                        let downloadUrl = down.dl_url;
-                        await conn.sendMessage(from, { audio: { url:downloadUrl }, caption: '> *©ɴᴀᴅᴇᴇɴ-ᴍᴅ ᴍᴀᴅᴇ ʙʏ ɴᴀᴅᴇᴇɴ ᴘᴏᴏʀɴᴀ*', mimetype: 'audio/mpeg'},{ quoted: mek });
-                        await conn.sendMessage(from, { react: { text: '📤', key: mek.key } })
-                        break;
-                    case '2':               
-                        // Send Document File
-                        let downdoc = await fg.yta(url);
-                        let downloaddocUrl = downdoc.dl_url;
-                        await conn.sendMessage(from, { document: { url:downloaddocUrl }, caption: '> *©ɴᴀᴅᴇᴇɴ-ᴍᴅ ᴍᴀᴅᴇ ʙʏ ɴᴀᴅᴇᴇɴ ᴘᴏᴏʀɴᴀ*', mimetype: 'audio/mpeg', fileName:data.title + ".mp3"}, { quoted: mek });
-                        await conn.sendMessage(from, { react: { text: '📤', key: mek.key } })
-                        break;
-                    default:
-                        reply("Invalid option. Please select a valid option🔴");
-                }
-
-            }
-        });
-
-    } catch (e) {
-        console.error(e);
-        await conn.sendMessage(from, { react: { text: '❌', key: mek.key } })
-        reply('An error occurred while processing your request.');
-    }
-});
-
-
-//==================== Video downloader =========================
+//====================mp4_dl=======================
 
 cmd({
-    pattern: 'mp4',
-    desc: 'download videos',
+    pattern: "mp4",
+    desc: "To download videos.",
     react: "🎞",
-    category: 'download',
+    category: "download",
     filename: __filename
 },
-async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-    try {
-        if (!q) return reply('*මට ලින්ක් එකක් හරි,නමක් හරි දීපන් download කරන්න 😑*');
+async(conn, mek, m,{from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply}) => {
+try{
+if(!q) return reply("Please give me a url or title")  
+const search = await yts(q)
+const data = search.videos[0];
+const url = data.url
+    
+    
+let desc = `
+⫷⦁[ * '-'_꩜ 𝘿𝘼𝙍𝙆 𝙕𝙀𝙍𝙊 𝙈𝘿 𝘿𝙊𝙒𝙉𝙇𝙊𝘼𝘿𝙀𝙍 ꩜_'-' * ]⦁⫸ 
 
-        const search = await yts(q);
-        const data = search.videos[0];
-        const url = data.url;
+🎥 *🎞 NADEEN-MD MP4 DOWNLOADER . .⚙️
 
-        let desc = `*🎞 NADEEN-MD MP4 DOWNLOADER . .⚙️*
+➥ *Title:* ${data.title} 
+➥ *Duration:* ${data.timestamp} 
+➥ *Views:* ${data.views} 
+➥ *Uploaded On:* ${data.ago} 
+➥ *Link:* ${data.url} 
 
-📽️⚙️ TITLE - ${data.title}
+> *©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*
+`
 
-📽️⚙️ VIEWS - ${data.views}
+await conn.sendMessage(from,{image:{url: data.thumbnail},caption:desc},{quoted:mek});
 
-📽️⚙️ DESCRIPTION - ${data.description}
+//download video
 
-📽️⚙️ TIME - ${data.timestamp}
+let down = await fg.ytv(url)
+let downloadUrl = down.dl_url
 
-📽️⚙️ AGO - ${data.ago}
+//send video message
+await conn.sendMessage(from,{video: {url:downloadUrl},mimetype:"video/mp4"},{quoted:mek})
+await conn.sendMessage(from,{document: {url:downloadUrl},mimetype:"video/mp4",fileName:data.title + ".mp4",caption:"*©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*"},{quoted:mek})
 
-*Reply This Message With Option*
-
-*1 Video With Normal Format*
-*2 Video With Document Format*
-
-> *©𝗡𝗔𝗗𝗘𝗘𝗡-𝗠𝗗*`;
-
-        const vv = await conn.sendMessage(from, { image: { url: data.thumbnail }, caption: desc }, { quoted: mek });
-
-        conn.ev.on('messages.upsert', async (msgUpdate) => {
-            const msg = msgUpdate.messages[0];
-            if (!msg.message || !msg.message.extendedTextMessage) return;
-
-            const selectedOption = msg.message.extendedTextMessage.text.trim();
-
-            if (msg.message.extendedTextMessage.contextInfo && msg.message.extendedTextMessage.contextInfo.stanzaId === vv.key.id) {
-                switch (selectedOption) {
-                    case '1':
-                        let downvid = await fg.ytv(url);
-                        let downloadvUrl = downvid.dl_url;
-                        await conn.sendMessage(from, { video : { url:downloadvUrl }, caption: '> *©ɴᴀᴅᴇᴇɴ-ᴍᴅ ᴍᴀᴅᴇ ʙʏ ɴᴀᴅᴇᴇɴ ᴘᴏᴏʀɴᴀ*', mimetype: 'video/mp4'},{ quoted: mek });
-                        break;
-                    case '2':
-                        let downviddoc = await fg.ytv(url);
-                        let downloadvdocUrl = downviddoc.dl_url;
-                        await conn.sendMessage(from, { document: { url:downloadvdocUrl }, caption: '> *©ɴᴀᴅᴇᴇɴ-ᴍᴅ ᴍᴀᴅᴇ ʙʏ ɴᴀᴅᴇᴇɴ ᴘᴏᴏʀɴᴀ*', mimetype: 'video/mp4', fileName:data.title + ".mp4" }, { quoted: mek });
-                        break;
-                    default:
-                        reply("Invalid option. Please select a valid option🔴");
-                }
-
-            }
-        });
-
-    } catch (e) {
-        console.error(e);
-        await conn.sendMessage(from, { react: { text: '❌', key: mek.key } })
-        reply('An error occurred while processing your request.');
-    }
-});
+}catch(e){
+console.log(e)
+  reply('𝐶𝑎𝑛𝑡 𝐹𝑖𝑛𝑑 α νι∂єσ')
+}
+})
